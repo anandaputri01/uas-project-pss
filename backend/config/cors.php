@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://helmetwash.up.railway.app/'],
+    'allowed_origins' => ['https://helmetwash.vercel.app/'],
 
     'allowed_origins_patterns' => [],
 
