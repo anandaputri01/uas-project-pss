@@ -16,7 +16,7 @@ export default function Home() {
         <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')] bg-cover bg-center" />
         <div className="relative container mx-auto px-6 py-24 text-center">
           <span className="inline-block py-1 px-3 rounded-full bg-brand-700 text-brand-100 text-sm font-semibold mb-4 animate-bounce">
-            Promo Spesial: Diskon 10% Juli!
+            Promo Spesial Juli!
           </span>
           <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight">
             Helm Bersih,
