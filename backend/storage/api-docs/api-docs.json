@@ -1,0 +1,1180 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "HelmetWash API",
+        "description": "REST API HelmetWash yang sinkron dengan model layanan, outlet, pesanan, dan riwayat status pada database.",
+        "contact": {
+            "name": "HelmetWash Support",
+            "email": "admin@helmetwash.test"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "HelmetWash API Server"
+        }
+    ],
+    "paths": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login admin",
+                "description": "Login menggunakan username atau email dan password. Mengembalikan JWT Bearer Token.",
+                "operationId": "login",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ..."
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "example": 3600
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Admin"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Kredensial tidak valid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login gagal. Periksa username dan password."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Profil user yang sedang login",
+                "description": "Mengembalikan data user yang sedang terautentikasi.",
+                "operationId": "me",
+                "responses": {
+                    "200": {
+                        "description": "Data user berhasil didapat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "authenticated": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Admin"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout admin",
+                "description": "Mengakhiri sesi JWT yang sedang dipakai.",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "Logout berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged out"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/refresh": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh JWT token",
+                "description": "Menghasilkan token baru untuk sesi yang sedang aktif.",
+                "operationId": "refresh",
+                "responses": {
+                    "200": {
+                        "description": "Token berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ..."
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "example": 3600
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token tidak valid atau sudah expired"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/catalog": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "summary": "Ambil data katalog",
+                "description": "Mengembalikan data katalog yang berasal dari konfigurasi aplikasi dan digunakan untuk form pemesanan.",
+                "operationId": "getCatalog",
+                "responses": {
+                    "200": {
+                        "description": "Data katalog berhasil didapat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "addons": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "antijamur"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Anti Jamur & Bakteri"
+                                                    },
+                                                    "price": {
+                                                        "type": "integer",
+                                                        "example": 10000
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "deliveryOptions": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "pickup"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Pick-up & Delivery"
+                                                    },
+                                                    "price": {
+                                                        "type": "integer",
+                                                        "example": 10000
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "orderSteps": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "Diterima"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/services": {
+            "get": {
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Daftar layanan",
+                "description": "Mengambil semua layanan yang tersimpan di tabel services.",
+                "operationId": "getServices",
+                "responses": {
+                    "200": {
+                        "description": "Daftar layanan berhasil didapat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Service"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/services": {
+            "put": {
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Sinkronisasi layanan (Admin)",
+                "description": "Memperbarui daftar layanan dari payload yang dikirim admin dan menyimpan ke tabel services.",
+                "operationId": "syncServices",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "services"
+                                ],
+                                "properties": {
+                                    "services": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "price"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "basic"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Paket Basic"
+                                                },
+                                                "price": {
+                                                    "type": "integer",
+                                                    "example": 25000
+                                                },
+                                                "desc": {
+                                                    "type": "string",
+                                                    "example": "Cuci luar dalam",
+                                                    "nullable": true
+                                                },
+                                                "features": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Cuci busa"
+                                                    },
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Layanan berhasil disinkronisasi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Perubahan layanan disimpan"
+                                        },
+                                        "services": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Service"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/addons": {
+            "put": {
+                "tags": [
+                    "Catalog"
+                ],
+                "summary": "Sinkronisasi tambahan layanan (Admin)",
+                "description": "Memperbarui seluruh daftar tambahan layanan. Yang tidak disertakan akan dihapus.",
+                "operationId": "syncAddons",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "addons"
+                                ],
+                                "properties": {
+                                    "addons": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "price"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "antijamur"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Anti Jamur & Bakteri"
+                                                },
+                                                "price": {
+                                                    "type": "integer",
+                                                    "example": 10000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tambahan layanan berhasil disinkronisasi"
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/outlets": {
+            "get": {
+                "tags": [
+                    "Outlets"
+                ],
+                "summary": "Daftar outlet",
+                "description": "Mengambil seluruh data outlet yang tersimpan di tabel outlets.",
+                "operationId": "getOutlets",
+                "responses": {
+                    "200": {
+                        "description": "Daftar outlet berhasil didapat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "outlets": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Outlet"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/orders": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Semua pesanan (Admin)",
+                "description": "Mengambil seluruh pesanan yang tersimpan di tabel orders beserta riwayat status.",
+                "operationId": "getAllOrders",
+                "responses": {
+                    "200": {
+                        "description": "Daftar pesanan berhasil didapat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Order"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/orders/{code}": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Lihat detail pesanan (Admin)",
+                "description": "Mengambil detail pesanan lengkap beserta riwayat status dan pembayarannya. Endpoint ini dilindungi (butuh autentikasi admin).",
+                "operationId": "adminGetOrder",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "description": "Kode pesanan",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "ORD-12345"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail pesanan berhasil didapat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "order": {
+                                            "$ref": "#/components/schemas/Order"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    },
+                    "404": {
+                        "description": "Pesanan tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/orders": {
+            "post": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Buat pesanan baru",
+                "description": "Menyimpan pesanan ke tabel orders dan membuat riwayat status awal.",
+                "operationId": "createOrder",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customerName",
+                                    "phone",
+                                    "serviceId",
+                                    "deliveryId",
+                                    "paymentMethod"
+                                ],
+                                "properties": {
+                                    "customerName": {
+                                        "type": "string",
+                                        "example": "Budi Santoso"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "08123456789"
+                                    },
+                                    "serviceId": {
+                                        "type": "string",
+                                        "example": "basic"
+                                    },
+                                    "addons": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "antijamur"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "deliveryId": {
+                                        "type": "string",
+                                        "example": "pickup"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Jl. Melati No. 5",
+                                        "nullable": true
+                                    },
+                                    "paymentMethod": {
+                                        "type": "string",
+                                        "example": "qris"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Pesanan berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pesanan berhasil dibuat"
+                                        },
+                                        "order": {
+                                            "$ref": "#/components/schemas/Order"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validasi gagal atau metode pengiriman tidak valid"
+                    }
+                }
+            }
+        },
+        "/api/orders/{code}": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Cek status pesanan",
+                "description": "Mengambil detail pesanan berdasarkan kode pesanan yang tersimpan di tabel orders.",
+                "operationId": "getOrder",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "description": "Kode pesanan",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "ORD-12345"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail pesanan berhasil didapat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "order": {
+                                            "$ref": "#/components/schemas/Order"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pesanan tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pesanan tidak ditemukan."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/orders/{code}/status": {
+            "patch": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Update status pesanan (Admin)",
+                "description": "Memperbarui status pesanan dan mencatat perubahan ke tabel order_status_histories.",
+                "operationId": "updateOrderStatus",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "description": "Kode pesanan",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "ORD-12345"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Dicuci",
+                                        "enum": [
+                                            "Diterima",
+                                            "Dicuci",
+                                            "Selesai",
+                                            "Diantar"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status pesanan diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Status pesanan diperbarui"
+                                        },
+                                        "order": {
+                                            "$ref": "#/components/schemas/Order"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    },
+                    "404": {
+                        "description": "Pesanan tidak ditemukan"
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/reports": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Laporan dan statistik (Admin)",
+                "description": "Mengembalikan ringkasan laporan berdasarkan data pesanan yang ada di database.",
+                "operationId": "getReports",
+                "responses": {
+                    "200": {
+                        "description": "Data laporan berhasil didapat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "summary": {
+                                            "properties": {
+                                                "totalOrders": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "totalRevenue": {
+                                                    "type": "integer",
+                                                    "example": 7500000
+                                                },
+                                                "avgOrder": {
+                                                    "type": "integer",
+                                                    "example": 50000
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "byService": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "count": {
+                                                        "type": "integer",
+                                                        "example": 80
+                                                    },
+                                                    "revenue": {
+                                                        "type": "integer",
+                                                        "example": 4000000
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Paket Premium"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "byDelivery": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "pickup"
+                                                    },
+                                                    "count": {
+                                                        "type": "integer",
+                                                        "example": 70
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "byStatus": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "Selesai"
+                                                    },
+                                                    "count": {
+                                                        "type": "integer",
+                                                        "example": 120
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "addonUsage": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "antijamur"
+                                                    },
+                                                    "count": {
+                                                        "type": "integer",
+                                                        "example": 45
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "byDate": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2026-07-02"
+                                                    },
+                                                    "revenue": {
+                                                        "type": "integer",
+                                                        "example": 350000
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "orders": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Order"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Service": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "basic"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Paket Basic"
+                    },
+                    "price": {
+                        "type": "integer",
+                        "example": 25000
+                    },
+                    "desc": {
+                        "type": "string",
+                        "example": "Cuci luar dalam + pengeringan"
+                    },
+                    "features": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "Cuci busa"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Outlet": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "HelmetWash Pusat"
+                    },
+                    "address": {
+                        "type": "string",
+                        "example": "Jl. Raya No. 1, Jakarta"
+                    },
+                    "lat": {
+                        "type": "number",
+                        "format": "float",
+                        "example": -6.2
+                    },
+                    "lng": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 106.816666
+                    }
+                },
+                "type": "object"
+            },
+            "Order": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "ORD-12345"
+                    },
+                    "customerName": {
+                        "type": "string",
+                        "example": "Budi Santoso"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "08123456789"
+                    },
+                    "serviceId": {
+                        "type": "string",
+                        "example": "basic"
+                    },
+                    "serviceName": {
+                        "type": "string",
+                        "example": "Paket Basic"
+                    },
+                    "addons": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "antijamur"
+                        }
+                    },
+                    "deliveryId": {
+                        "type": "string",
+                        "example": "pickup"
+                    },
+                    "deliveryName": {
+                        "type": "string",
+                        "example": "Pick-up & Delivery"
+                    },
+                    "address": {
+                        "type": "string",
+                        "example": "Jl. Melati No. 5"
+                    },
+                    "priceBase": {
+                        "type": "integer",
+                        "example": 25000
+                    },
+                    "priceAddons": {
+                        "type": "integer",
+                        "example": 5000
+                    },
+                    "priceDelivery": {
+                        "type": "integer",
+                        "example": 10000
+                    },
+                    "totalPrice": {
+                        "type": "integer",
+                        "example": 40000
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "Diterima"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-07-02T10:30:00.000Z"
+                    },
+                    "payment": {
+                        "properties": {
+                            "method": {
+                                "type": "string",
+                                "example": "qris"
+                            },
+                            "status": {
+                                "type": "string",
+                                "example": "paid"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "history": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "status": {
+                                    "type": "string",
+                                    "example": "Diterima"
+                                },
+                                "date": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "example": "2026-07-02T10:30:00.000Z"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Masukkan token JWT yang didapat dari POST /api/login",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Autentikasi admin"
+        },
+        {
+            "name": "Catalog",
+            "description": "Data katalog layanan, addon, dan opsi pengiriman"
+        },
+        {
+            "name": "Services",
+            "description": "Manajemen paket layanan"
+        },
+        {
+            "name": "Outlets",
+            "description": "Informasi lokasi outlet"
+        },
+        {
+            "name": "Orders",
+            "description": "Pembuatan dan pemantauan pesanan"
+        },
+        {
+            "name": "Reports",
+            "description": "Ringkasan laporan admin"
+        }
+    ]
+}
